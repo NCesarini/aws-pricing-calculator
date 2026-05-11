@@ -8,6 +8,7 @@
     "test": "node --test test/*.test.js",
     "mcp": "node mcp-server.js",
     "mcp:sse": "node mcp-sse-server.js",
+    "mcp:sse:public": "HOST=0.0.0.0 node mcp-sse-server.js",
     "build": "esbuild mcp-server.js --bundle --platform=node --outfile=dist/mcp-server.js --format=cjs --minify && rm -f dist/aws-calculator.zip && zip dist/aws-calculator.zip mcp-server.js lib/aws-client.js lib/estimate-builder.js lib/ec2.js package.json"
   },
   "dependencies": {
