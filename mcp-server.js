@@ -7,6 +7,7 @@ const { z } = require('zod');
 const { PARTITIONS, loadManifest, findService, fetchServiceDefinition, extractInputFields, searchServices, fetchEstimate, estimateToMarkdown } = require('./lib/aws-client');
 const EstimateBuilder = require('./lib/estimate-builder');
 
+function createAwsCalculatorServer() {
 const estimates = new Map();
 
 const META_KEYS = new Set(['region', 'description']);
@@ -261,12 +262,20 @@ server.tool(
   }
 );
 
+return server;
+}
+
 async function main() {
+  const server = createAwsCalculatorServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }
 
-main().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch(err => {
+    console.error(err);
+    process.exit(1);
+  });
+}
+
+module.exports = { createAwsCalculatorServer };
