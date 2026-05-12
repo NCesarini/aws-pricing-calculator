@@ -39,6 +39,8 @@ function notFound(res) {
 }
 
 async function handleSse(req, res) {
+  const remote = req.socket?.remoteAddress || 'unknown';
+  console.log(`SSE client connected from ${remote} (${req.method} ${req.url})`);
   const mcpServer = createAwsCalculatorServer();
   const transport = new SSEServerTransport(messagesPath, res, {
     enableDnsRebindingProtection,
