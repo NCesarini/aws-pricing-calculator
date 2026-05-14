@@ -4,7 +4,7 @@
 const http = require('node:http');
 const { URL } = require('node:url');
 const { SSEServerTransport } = require('@modelcontextprotocol/sdk/server/sse.js');
-const { createAwsCalculatorServer } = require('./mcp-server');
+const { createAwsCalculatorServer, createEstimateStoreRegistry } = require('./mcp-server');
 
 const host = process.env.HOST || '127.0.0.1';
 const port = Number.parseInt(process.env.PORT || '8767', 10);
@@ -18,6 +18,7 @@ const enableDnsRebindingProtection =
   allowedHosts.length > 0 || allowedOrigins.length > 0;
 
 const sessions = new Map();
+const estimateStores = createEstimateStoreRegistry();
 
 function splitEnv(value) {
   if (!value) return [];
@@ -38,10 +39,17 @@ function notFound(res) {
   sendJson(res, 404, { error: 'not_found' });
 }
 
+function getMcpSessionId(req) {
+  const raw = req.headers['mcp-session-id'];
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
 async function handleSse(req, res) {
   const remote = req.socket?.remoteAddress || 'unknown';
   console.log(`SSE client connected from ${remote} (${req.method} ${req.url})`);
-  const mcpServer = createAwsCalculatorServer();
+  const estimates = estimateStores.getStore(getMcpSessionId(req));
+  const mcpServer = createAwsCalculatorServer({ estimates });
   const transport = new SSEServerTransport(messagesPath, res, {
     enableDnsRebindingProtection,
     allowedHosts,

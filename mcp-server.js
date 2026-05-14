@@ -7,8 +7,28 @@ const { z } = require('zod');
 const { PARTITIONS, loadManifest, findService, fetchServiceDefinition, extractInputFields, searchServices, fetchEstimate, estimateToMarkdown } = require('./lib/aws-client');
 const EstimateBuilder = require('./lib/estimate-builder');
 
-function createAwsCalculatorServer() {
-const estimates = new Map();
+const DEFAULT_ESTIMATE_STORE_KEY = 'default';
+const defaultEstimateStore = new Map();
+
+function createEstimateStoreRegistry() {
+  const stores = new Map();
+
+  return {
+    getStore(sessionId) {
+      const key = typeof sessionId === 'string' && sessionId.trim()
+        ? sessionId.trim()
+        : DEFAULT_ESTIMATE_STORE_KEY;
+
+      if (!stores.has(key)) {
+        stores.set(key, new Map());
+      }
+
+      return stores.get(key);
+    },
+  };
+}
+
+function createAwsCalculatorServer({ estimates = defaultEstimateStore } = {}) {
 
 const META_KEYS = new Set(['region', 'description']);
 const EC2_KEYS = new Set([
@@ -278,4 +298,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { createAwsCalculatorServer };
+module.exports = { createAwsCalculatorServer, createEstimateStoreRegistry };
